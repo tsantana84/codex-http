@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex HTTP API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin:0;
+            background: #fafafa;
+        }
+        .swagger-ui .topbar {
+            background-color: #1976d2;
+        }
+        .swagger-ui .topbar .download-url-wrapper {
+            display: none;
+        }
+        .custom-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .custom-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .custom-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .quick-links {
+            background: white;
+            margin: 0 20px 20px 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .quick-links h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .quick-link {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #495057;
+            transition: all 0.2s;
+        }
+        .quick-link:hover {
+            background: #e9ecef;
+            border-color: #1976d2;
+            color: #1976d2;
+        }
+        .quick-link strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-header">
+        <h1>🚀 Codex HTTP API</h1>
+        <p>Interactive API Documentation for the OpenAI Codex CLI</p>
+    </div>
+
+    <div class="quick-links">
+        <h3>🔗 Quick Start</h3>
+        <div class="link-grid">
+            <div class="quick-link">
+                <strong>1. Start Server</strong>
+                <code>codex-http --port 3000</code>
+            </div>
+            <div class="quick-link">
+                <strong>2. Health Check</strong>
+                <code>GET /health</code>
+            </div>
+            <div class="quick-link">
+                <strong>3. Create Session</strong>
+                <code>POST /sessions</code>
+            </div>
+            <div class="quick-link">
+                <strong>4. Send Message</strong>
+                <code>POST /sessions/{id}/messages</code>
+            </div>
+        </div>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Build a system
+            const ui = SwaggerUIBundle({
+                url: './swagger.yaml',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                tryItOutEnabled: true,
+                supportedSubmitMethods: ['get', 'post', 'delete'],
+                defaultModelsExpandDepth: 2,
+                defaultModelExpandDepth: 2,
+                docExpansion: 'list',
+                operationsSorter: 'alpha',
+                tagsSorter: 'alpha',
+                validatorUrl: null,
+                onComplete: function() {
+                    console.log('Swagger UI loaded successfully');
+                },
+                onFailure: function(data) {
+                    console.error('Failed to load Swagger UI:', data);
+                }
+            });
+
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html>

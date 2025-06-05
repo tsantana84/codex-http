@@ -1,0 +1,74 @@
+meta {
+  name: Create Full-Auto Session
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/sessions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "model": "codex-mini-latest", 
+    "provider": "openai",
+    "approvalMode": "full-auto",
+    "apiKey": "{{apiKey}}",
+    "additionalWritableRoots": [
+      "/tmp/codex-workspace",
+      "/Users/username/projects/sandbox"
+    ],
+    "config": {
+      "reasoningEffort": "high",
+      "flexMode": true
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("fullAutoSessionId", res.getBody().sessionId);
+    console.log("Full-auto session created:", res.getBody().sessionId);
+  }
+}
+
+tests {
+  test("should create full-auto session", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().config.approvalMode).to.equal('full-auto');
+  });
+}
+
+docs {
+  # Advanced - Create Full-Auto Session
+  
+  Creates a session with full automation enabled (use with caution).
+  
+  **Full-Auto Mode:**
+  - Automatically applies all file changes
+  - Automatically executes shell commands
+  - Runs in sandboxed environment
+  - Network access disabled for commands
+  
+  **Security Features:**
+  - Commands run network-disabled
+  - File writes limited to specified directories
+  - Sandboxed execution environment
+  - Automatic resource cleanup
+  
+  **Additional Writable Roots:**
+  - Specify extra directories the agent can write to
+  - Useful for workspace isolation
+  - Must be absolute paths
+  
+  **⚠️ Use Cases (Trusted Environments Only):**
+  - Automated testing
+  - CI/CD pipelines
+  - Sandboxed development
+  - Batch processing tasks
+  
+  **⚠️ Security Warning:**
+  Only use full-auto mode in trusted, isolated environments.
+}

@@ -1,0 +1,48 @@
+meta {
+  name: Get Message History - Paginated
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages?offset=5&limit=10
+  body: none
+  auth: none
+}
+
+params:query {
+  offset: 5
+  limit: 10
+}
+
+tests {
+  test("should handle pagination correctly", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().offset).to.equal(5);
+    expect(res.getBody().limit).to.equal(10);
+    expect(res.getBody().messages.length).to.be.at.most(10);
+  });
+}
+
+docs {
+  # Get Message History - Paginated
+  
+  Example of retrieving message history with pagination.
+  
+  **This example shows:**
+  - Starting from message index 5
+  - Limiting to 10 messages per page
+  - How to implement pagination in your client
+  
+  **Pagination Best Practices:**
+  ```javascript
+  // Get first page
+  const page1 = await fetch('/sessions/abc123/messages?offset=0&limit=10');
+  
+  // Get next page
+  const page2 = await fetch('/sessions/abc123/messages?offset=10&limit=10');
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(response.totalCount / limit);
+  ```
+}

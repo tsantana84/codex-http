@@ -1,0 +1,76 @@
+meta {
+  name: Get Message History
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages?offset=0&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  offset: 0
+  limit: 20
+}
+
+tests {
+  test("should get message history successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('sessionId');
+    expect(res.getBody()).to.have.property('messages');
+    expect(res.getBody()).to.have.property('totalCount');
+    expect(res.getBody()).to.have.property('offset');
+    expect(res.getBody()).to.have.property('limit');
+  });
+  
+  test("should return array of messages", function() {
+    expect(res.getBody().messages).to.be.an('array');
+  });
+  
+  test("should respect pagination parameters", function() {
+    expect(res.getBody().offset).to.equal(0);
+    expect(res.getBody().limit).to.equal(20);
+  });
+}
+
+docs {
+  # Get Message History
+  
+  Retrieves the conversation history for a session with pagination.
+  
+  **Query Parameters:**
+  - `offset` (number, optional): Starting index (default: 0)
+  - `limit` (number, optional): Maximum messages to return (default: 100, max: 1000)
+  
+  **Response:**
+  ```json
+  {
+    "sessionId": "abc123",
+    "messages": [
+      {
+        "id": "msg_1",
+        "type": "message",
+        "role": "user",
+        "content": [{"type": "input_text", "text": "Hello!"}]
+      },
+      {
+        "id": "msg_2", 
+        "type": "message",
+        "role": "assistant",
+        "content": [{"type": "output_text", "text": "Hi there!"}]
+      }
+    ],
+    "totalCount": 8,
+    "offset": 0,
+    "limit": 20
+  }
+  ```
+  
+  **Use Cases:**
+  - Review conversation history
+  - Export chat logs
+  - Debugging agent responses
+  - Context analysis
+}

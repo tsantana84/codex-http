@@ -1,0 +1,54 @@
+meta {
+  name: Get Session Info
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/sessions/{{sessionId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("should get session info successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('sessionId');
+    expect(res.getBody()).to.have.property('config');
+    expect(res.getBody()).to.have.property('messageCount');
+    expect(res.getBody()).to.have.property('createdAt');
+    expect(res.getBody()).to.have.property('lastActivity');
+  });
+  
+  test("should return correct sessionId", function() {
+    expect(res.getBody().sessionId).to.equal(bru.getEnvVar("sessionId"));
+  });
+}
+
+docs {
+  # Get Session Info
+  
+  Retrieves information about an existing session.
+  
+  **URL Parameters:**
+  - `sessionId`: The ID of the session to retrieve
+  
+  **Response:**
+  ```json
+  {
+    "sessionId": "abc123",
+    "config": {
+      "model": "codex-mini-latest",
+      "provider": "openai"
+    },
+    "messageCount": 4,
+    "createdAt": "2025-01-06T18:30:00.000Z",
+    "lastActivity": "2025-01-06T18:35:00.000Z"
+  }
+  ```
+  
+  **Use Cases:**
+  - Monitor session activity
+  - Check session configuration
+  - Verify session exists before operations
+}

@@ -1,0 +1,59 @@
+meta {
+  name: Send Message - File Analysis
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "Please analyze the current directory structure. List all Python files and provide a brief summary of what each file does based on its content.",
+    "images": []
+  }
+}
+
+tests {
+  test("should handle file analysis request", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('messages');
+  });
+  
+  test("should include shell commands for directory listing", function() {
+    const messages = res.getBody().messages;
+    const functionCalls = messages.filter(m => 
+      m.type === 'function_call' && 
+      (m.name === 'shell' || m.type === 'local_shell_call')
+    );
+    
+    expect(functionCalls.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Send Message - File Analysis
+  
+  Example of requesting file system analysis and code review.
+  
+  **What this demonstrates:**
+  - File system exploration
+  - Code analysis capabilities
+  - Directory traversal
+  - Content summarization
+  
+  **Expected Agent Actions:**
+  1. List directory contents
+  2. Identify Python files
+  3. Read and analyze file contents
+  4. Provide summaries and insights
+  
+  **Useful for:**
+  - Project onboarding
+  - Code audits
+  - Documentation generation
+  - Understanding existing codebases
+}

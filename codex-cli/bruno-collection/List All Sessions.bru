@@ -1,0 +1,63 @@
+meta {
+  name: List All Sessions
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/sessions
+  body: none
+  auth: none
+}
+
+tests {
+  test("should list sessions successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('sessions');
+    expect(res.getBody()).to.have.property('totalCount');
+    expect(res.getBody().sessions).to.be.an('array');
+  });
+  
+  test("should have consistent data structure", function() {
+    const sessions = res.getBody().sessions;
+    if (sessions.length > 0) {
+      const session = sessions[0];
+      expect(session).to.have.property('sessionId');
+      expect(session).to.have.property('config');
+      expect(session).to.have.property('messageCount');
+      expect(session).to.have.property('createdAt');
+      expect(session).to.have.property('lastActivity');
+    }
+  });
+}
+
+docs {
+  # List All Sessions
+  
+  Retrieves a list of all active sessions on the server.
+  
+  **Response:**
+  ```json
+  {
+    "sessions": [
+      {
+        "sessionId": "abc123",
+        "config": {
+          "model": "codex-mini-latest",
+          "provider": "openai"
+        },
+        "messageCount": 4,
+        "createdAt": "2025-01-06T18:30:00.000Z",
+        "lastActivity": "2025-01-06T18:35:00.000Z"
+      }
+    ],
+    "totalCount": 1
+  }
+  ```
+  
+  **Use Cases:**
+  - Server administration
+  - Session monitoring
+  - Resource usage tracking
+  - Debug active sessions
+}

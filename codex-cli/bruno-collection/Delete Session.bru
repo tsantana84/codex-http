@@ -1,0 +1,62 @@
+meta {
+  name: Delete Session
+  type: http
+  seq: 13
+}
+
+delete {
+  url: {{baseUrl}}/sessions/{{sessionId}}
+  body: none
+  auth: none
+}
+
+script:post-response {
+  if (res.getStatus() === 204) {
+    console.log("Session deleted successfully");
+    // Clear the sessionId since it's no longer valid
+    bru.setEnvVar("sessionId", "");
+  }
+}
+
+tests {
+  test("should delete session successfully", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+  
+  test("should have empty response body", function() {
+    expect(res.getBody()).to.be.empty;
+  });
+}
+
+docs {
+  # Delete Session
+  
+  Deletes a session and frees all associated resources.
+  
+  **Response:**
+  - Status: 204 No Content
+  - Body: Empty
+  
+  **What happens when deleting:**
+  1. Agent loop is terminated
+  2. All pending operations are cancelled
+  3. Session data is removed from memory
+  4. Resources are freed
+  
+  **Use Cases:**
+  - Clean up completed sessions
+  - Free resources
+  - End user sessions
+  - Bulk cleanup operations
+  
+  **Important Notes:**
+  - Session cannot be recovered after deletion
+  - All conversation history is lost
+  - Any running operations are immediately cancelled
+  - Subsequent requests to this session will return 404
+  
+  **Best Practices:**
+  - Always delete sessions when done
+  - Implement cleanup in your client applications
+  - Consider session timeout as alternative
+}

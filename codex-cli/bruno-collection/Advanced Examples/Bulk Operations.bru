@@ -1,0 +1,59 @@
+meta {
+  name: Bulk Operations
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "I need to refactor multiple Python files in this project. Please:\n1. Find all .py files in the current directory\n2. Add type hints to function parameters and return types\n3. Update docstrings to follow Google style\n4. Add proper error handling where missing\n5. Run tests after each file to ensure nothing breaks\n\nPlease work through each file systematically and report progress.",
+    "images": []
+  }
+}
+
+tests {
+  test("should handle bulk operations request", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('messages');
+  });
+}
+
+docs {
+  # Advanced - Bulk Operations
+  
+  Example of requesting complex, multi-step operations across multiple files.
+  
+  **What this demonstrates:**
+  - Systematic file processing
+  - Multiple refactoring tasks
+  - Error prevention with testing
+  - Progress reporting
+  
+  **Expected Agent Workflow:**
+  1. Discovery phase (find all Python files)
+  2. Analysis phase (examine current state)
+  3. Planning phase (determine order of operations)
+  4. Execution phase (apply changes systematically)
+  5. Validation phase (run tests after changes)
+  6. Reporting phase (summarize what was done)
+  
+  **Bulk Operation Patterns:**
+  - File discovery and filtering
+  - Iterative processing
+  - Validation between steps
+  - Rollback on failures
+  - Progress tracking
+  
+  **Use Cases:**
+  - Code modernization
+  - Style guide enforcement
+  - Security updates
+  - Dependency migrations
+  - Documentation generation
+}

@@ -1,0 +1,51 @@
+meta {
+  name: Session Not Found
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/sessions/invalid-session-id-12345
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 404 for invalid session", function() {
+    expect(res.getStatus()).to.equal(404);
+    expect(res.getBody()).to.have.property('error');
+    expect(res.getBody().error).to.equal('Session not found');
+  });
+}
+
+docs {
+  # Error Handling - Session Not Found
+  
+  Example of error response when requesting an invalid session.
+  
+  **Response:**
+  ```json
+  {
+    "error": "Session not found"
+  }
+  ```
+  
+  **When this occurs:**
+  - Session ID doesn't exist
+  - Session was deleted
+  - Session expired due to inactivity
+  - Typo in session ID
+  
+  **Error Handling in Client:**
+  ```javascript
+  try {
+    const response = await fetch('/sessions/invalid-id');
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('API Error:', error.error);
+    }
+  } catch (err) {
+    console.error('Network Error:', err);
+  }
+  ```
+}

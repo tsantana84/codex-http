@@ -1,0 +1,79 @@
+meta {
+  name: Complete Development Workflow
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "Let's build a complete REST API for a simple todo application. Please:\n\n1. Create the project structure with appropriate directories\n2. Set up a Python Flask application with:\n   - User authentication (JWT)\n   - CRUD operations for todos\n   - Database models (SQLite for simplicity)\n   - Input validation\n   - Error handling\n   - API documentation\n3. Create comprehensive tests\n4. Add a requirements.txt file\n5. Create a README with setup instructions\n6. Run the tests to verify everything works\n\nPlease work through this step by step and explain what you're doing at each stage.",
+    "images": []
+  }
+}
+
+tests {
+  test("should handle complex development workflow", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('messages');
+  });
+}
+
+docs {
+  # Workflow - Complete Development Workflow
+  
+  Example of a comprehensive development project from start to finish.
+  
+  **This demonstrates:**
+  - Full-stack application development
+  - Project structure creation
+  - Multiple file types and technologies
+  - Testing and validation
+  - Documentation generation
+  
+  **Expected Project Structure:**
+  ```
+  todo-api/
+  ├── app/
+  │   ├── __init__.py
+  │   ├── models.py
+  │   ├── auth.py
+  │   ├── routes.py
+  │   └── utils.py
+  ├── tests/
+  │   ├── test_auth.py
+  │   ├── test_todos.py
+  │   └── conftest.py
+  ├── requirements.txt
+  ├── README.md
+  └── run.py
+  ```
+  
+  **Technologies Involved:**
+  - Flask web framework
+  - SQLite database
+  - JWT authentication
+  - pytest testing
+  - API documentation
+  
+  **Agent Workflow:**
+  1. Project planning and structure
+  2. Database model design
+  3. Authentication implementation
+  4. API endpoint creation
+  5. Test suite development
+  6. Documentation writing
+  7. Integration testing
+  8. Final verification
+  
+  **Perfect for testing:**
+  - End-to-end development capabilities
+  - Multi-file project management
+  - Technology integration
+  - Best practices implementation
+}

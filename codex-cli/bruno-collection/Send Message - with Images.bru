@@ -1,0 +1,58 @@
+meta {
+  name: Send Message - with Images
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "I have a screenshot of an error message. Can you help me understand what's wrong and how to fix it?",
+    "images": [
+      "/path/to/error-screenshot.png",
+      "/path/to/code-snippet.jpg"
+    ]
+  }
+}
+
+tests {
+  test("should handle message with images", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('messages');
+  });
+}
+
+docs {
+  # Send Message - with Images
+  
+  Example of sending a message with image attachments.
+  
+  **What this demonstrates:**
+  - Multimodal input (text + images)
+  - Image analysis capabilities
+  - Error message interpretation from screenshots
+  - Visual debugging assistance
+  
+  **Image Types Supported:**
+  - Screenshots of error messages
+  - Code snippets in images
+  - UI mockups
+  - Diagrams and flowcharts
+  - Terminal outputs
+  
+  **Note:**
+  - Image paths must be accessible to the server
+  - Supported formats: PNG, JPG, JPEG, GIF
+  - Images are processed alongside the text message
+  
+  **Expected Agent Actions:**
+  1. Analyze provided images
+  2. Extract text/code from screenshots
+  3. Interpret error messages
+  4. Provide solutions based on visual context
+}

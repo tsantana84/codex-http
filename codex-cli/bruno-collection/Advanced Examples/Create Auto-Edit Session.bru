@@ -1,0 +1,61 @@
+meta {
+  name: Create Auto-Edit Session
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/sessions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "model": "codex-mini-latest",
+    "provider": "openai",
+    "approvalMode": "auto-edit",
+    "apiKey": "{{apiKey}}",
+    "config": {
+      "reasoningEffort": "high",
+      "disableResponseStorage": false
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("autoEditSessionId", res.getBody().sessionId);
+    console.log("Auto-edit session created:", res.getBody().sessionId);
+  }
+}
+
+tests {
+  test("should create auto-edit session", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody().config.approvalMode).to.equal('auto-edit');
+  });
+}
+
+docs {
+  # Advanced - Create Auto-Edit Session
+  
+  Creates a session with automatic file editing enabled.
+  
+  **Auto-Edit Mode:**
+  - Automatically applies file patches
+  - Still requires approval for shell commands
+  - Good for code editing workflows
+  - Safer than full-auto mode
+  
+  **Configuration Options:**
+  - `reasoningEffort`: "low", "medium", or "high"
+  - `disableResponseStorage`: Use stateless mode
+  - `flexMode`: Enable flex processing tier
+  
+  **Use Cases:**
+  - Automated code refactoring
+  - Batch file modifications
+  - Safe editing workflows
+  - CI/CD integrations
+}

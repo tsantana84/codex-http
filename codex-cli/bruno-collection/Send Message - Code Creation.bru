@@ -1,0 +1,59 @@
+meta {
+  name: Send Message - Code Creation
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "Create a Python function that calculates the Fibonacci sequence up to n numbers. Include error handling and docstrings. Then create a simple test file for it.",
+    "images": []
+  }
+}
+
+tests {
+  test("should handle code creation request", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('messages');
+    
+    const messages = res.getBody().messages;
+    expect(messages.length).to.be.greaterThan(0);
+  });
+  
+  test("should include function calls for file creation", function() {
+    const messages = res.getBody().messages;
+    const functionCalls = messages.filter(m => m.type === 'function_call');
+    
+    // Should have at least one function call for file operations
+    expect(functionCalls.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Send Message - Code Creation
+  
+  Example of requesting the agent to create code files.
+  
+  **What this demonstrates:**
+  - Code generation requests
+  - File creation operations
+  - Function calls in responses
+  - Multi-file projects
+  
+  **Expected Agent Actions:**
+  1. Create a Python file with Fibonacci function
+  2. Add proper docstrings and error handling
+  3. Create a test file
+  4. Possibly run tests to verify functionality
+  
+  **Message Types in Response:**
+  - `message` with assistant explanation
+  - `function_call` for file operations
+  - `function_call_output` showing results
+}

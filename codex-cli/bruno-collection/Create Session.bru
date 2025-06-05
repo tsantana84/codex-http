@@ -1,0 +1,78 @@
+meta {
+  name: Create Session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/sessions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "model": "codex-mini-latest",
+    "provider": "openai",
+    "approvalMode": "suggest",
+    "apiKey": "{{apiKey}}",
+    "additionalWritableRoots": [],
+    "config": {
+      "reasoningEffort": "medium",
+      "flexMode": false
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("sessionId", res.getBody().sessionId);
+    console.log("Session created:", res.getBody().sessionId);
+  }
+}
+
+tests {
+  test("should create session successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody()).to.have.property('sessionId');
+    expect(res.getBody()).to.have.property('config');
+    expect(res.getBody()).to.have.property('createdAt');
+  });
+  
+  test("should return valid sessionId", function() {
+    expect(res.getBody().sessionId).to.be.a('string');
+    expect(res.getBody().sessionId.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Create Session
+  
+  Creates a new agent session with specified configuration.
+  
+  **Request Body Parameters:**
+  - `model` (string, optional): AI model to use (defaults to config)
+  - `provider` (string, optional): AI provider (defaults to "openai")
+  - `approvalMode` (string, optional): "suggest", "auto-edit", or "full-auto"
+  - `apiKey` (string, optional): API key (uses env var if not provided)
+  - `additionalWritableRoots` (array, optional): Additional writable directories
+  - `config` (object, optional): Additional configuration overrides
+  
+  **Approval Modes:**
+  - `suggest`: User approval required for all actions
+  - `auto-edit`: Automatic file edits, manual command approval
+  - `full-auto`: Automatic edits and commands (sandboxed)
+  
+  **Example Response:**
+  ```json
+  {
+    "sessionId": "abc123...",
+    "config": {
+      "model": "codex-mini-latest",
+      "provider": "openai",
+      "approvalMode": "suggest"
+    },
+    "createdAt": "2025-01-06T18:30:00.000Z"
+  }
+  ```
+}

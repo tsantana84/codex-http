@@ -1,0 +1,818 @@
+openapi: 3.0.3
+info:
+  title: Codex HTTP API
+  description: |
+    RESTful API for the OpenAI Codex CLI - an AI-powered coding assistant that runs in your terminal.
+    
+    ## Overview
+    
+    The Codex HTTP API provides programmatic access to the same powerful agent capabilities available through the CLI. Each session maintains its own AI agent instance with configurable approval modes and model selection.
+    
+    ## Key Features
+    
+    - **Session-based Architecture**: Each session is an independent AI agent instance
+    - **Multiple AI Providers**: OpenAI, Gemini, Anthropic, Ollama, and more
+    - **Configurable Approval Modes**: From manual approval to full automation
+    - **Sandboxed Execution**: Safe command execution with network isolation
+    - **Multimodal Support**: Text and image inputs
+    - **Real-time Processing**: Streaming responses and tool execution
+    
+    ## Model Selection
+    
+    The HTTP server itself doesn't use any AI model - each session chooses its own model when created. This allows multiple sessions to use different models and providers simultaneously on the same server.
+    
+    ## Security
+    
+    - Commands run in sandboxed environments
+    - Network access disabled by default
+    - File system access controlled
+    - API keys handled securely
+    
+    ## Getting Started
+    
+    1. Start the server: `codex-http --port 3000`
+    2. Create a session with your preferred model
+    3. Send messages and receive AI-powered responses
+    4. Clean up sessions when done
+    
+  version: 1.0.0
+  contact:
+    name: Codex CLI
+    url: https://github.com/openai/codex
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: http://localhost:8080
+    description: Alternative local server
+
+tags:
+  - name: Health
+    description: Server health and status
+  - name: Sessions
+    description: Session lifecycle management
+  - name: Messaging
+    description: AI agent interaction
+  - name: Operations
+    description: Session operations and control
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Check if the server is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                timestamp: "2025-01-06T18:30:00.000Z"
+
+  /sessions:
+    get:
+      tags:
+        - Sessions
+      summary: List All Sessions
+      description: Retrieve a list of all active sessions on the server
+      operationId: listSessions
+      responses:
+        '200':
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+              example:
+                sessions:
+                  - sessionId: "abc123"
+                    config:
+                      model: "codex-mini-latest"
+                      provider: "openai"
+                    messageCount: 4
+                    createdAt: "2025-01-06T18:30:00.000Z"
+                    lastActivity: "2025-01-06T18:35:00.000Z"
+                totalCount: 1
+
+    post:
+      tags:
+        - Sessions
+      summary: Create Session
+      description: |
+        Create a new AI agent session with specified configuration.
+        
+        **Model Selection**: Each session can use a different AI model and provider. The server itself doesn't use any model - sessions choose their own configuration.
+        
+        **Approval Modes**:
+        - `suggest`: Manual approval required for all actions
+        - `auto-edit`: Automatic file edits, manual command approval  
+        - `full-auto`: Full automation in sandboxed environment
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+            examples:
+              openai-default:
+                summary: OpenAI Default
+                value:
+                  model: "codex-mini-latest"
+                  provider: "openai"
+                  approvalMode: "suggest"
+              gemini-pro:
+                summary: Gemini 2.5 Pro
+                value:
+                  model: "gemini-2.5-pro"
+                  provider: "gemini"
+                  approvalMode: "auto-edit"
+                  apiKey: "AIza-your-gemini-key"
+              full-auto:
+                summary: Full Automation
+                value:
+                  model: "gpt-4"
+                  provider: "openai"
+                  approvalMode: "full-auto"
+                  additionalWritableRoots: ["/tmp/workspace"]
+                  config:
+                    reasoningEffort: "high"
+                    flexMode: true
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+              example:
+                sessionId: "abc123-def456"
+                config:
+                  model: "codex-mini-latest"
+                  provider: "openai"
+                  approvalMode: "suggest"
+                createdAt: "2025-01-06T18:30:00.000Z"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Invalid approval mode"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Failed to create session"
+
+  /sessions/{sessionId}:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        description: Unique session identifier
+        schema:
+          type: string
+          example: "abc123-def456"
+    
+    get:
+      tags:
+        - Sessions
+      summary: Get Session Info
+      description: Retrieve information about a specific session
+      operationId: getSession
+      responses:
+        '200':
+          description: Session information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionInfoResponse'
+              example:
+                sessionId: "abc123"
+                config:
+                  model: "codex-mini-latest"
+                  provider: "openai"
+                messageCount: 4
+                createdAt: "2025-01-06T18:30:00.000Z"
+                lastActivity: "2025-01-06T18:35:00.000Z"
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Session not found"
+    
+    delete:
+      tags:
+        - Sessions
+      summary: Delete Session
+      description: |
+        Delete a session and free all associated resources.
+        
+        **Warning**: This action cannot be undone. All conversation history will be lost.
+      operationId: deleteSession
+      responses:
+        '204':
+          description: Session deleted successfully
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Session not found"
+
+  /sessions/{sessionId}/messages:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        description: Unique session identifier
+        schema:
+          type: string
+          example: "abc123-def456"
+    
+    get:
+      tags:
+        - Messaging
+      summary: Get Message History
+      description: Retrieve conversation history for a session with pagination support
+      operationId: getMessageHistory
+      parameters:
+        - name: offset
+          in: query
+          description: Starting index for pagination
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: limit
+          in: query
+          description: Maximum number of messages to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          example: 20
+      responses:
+        '200':
+          description: Message history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageHistoryResponse'
+              example:
+                sessionId: "abc123"
+                messages:
+                  - id: "msg_1"
+                    type: "message"
+                    role: "user"
+                    content:
+                      - type: "input_text"
+                        text: "Hello! Create a Python function."
+                  - id: "msg_2"
+                    type: "message"
+                    role: "assistant"
+                    content:
+                      - type: "output_text"
+                        text: "I'll create a Python function for you."
+                totalCount: 8
+                offset: 0
+                limit: 20
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      tags:
+        - Messaging
+      summary: Send Message
+      description: |
+        Send a message to the AI agent and receive a response.
+        
+        **Message Processing**: The agent will process your message, potentially execute tools (file operations, shell commands), and return a structured response with all interaction steps.
+        
+        **Multimodal Support**: Include image paths for visual analysis and understanding.
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+            examples:
+              simple-text:
+                summary: Simple Text Message
+                value:
+                  message: "Hello! Please introduce yourself."
+                  images: []
+              code-generation:
+                summary: Code Generation Request
+                value:
+                  message: "Create a Python function that calculates fibonacci numbers with proper error handling and docstrings."
+                  images: []
+              with-images:
+                summary: Multimodal Message
+                value:
+                  message: "Analyze this error screenshot and help me fix it."
+                  images: ["/path/to/error-screenshot.png"]
+              debugging:
+                summary: Debugging Request
+                value:
+                  message: "I'm getting a TypeError in my Python code. Can you help debug it? First check what files we have."
+                  images: []
+      responses:
+        '200':
+          description: Message processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                sessionId: "abc123"
+                messages:
+                  - type: "message"
+                    role: "user"
+                    content:
+                      - type: "input_text"
+                        text: "Create a Python function"
+                  - id: "msg_456"
+                    type: "message"
+                    role: "assistant"
+                    content:
+                      - type: "output_text"
+                        text: "I'll create a Python function for you."
+                  - id: "func_789"
+                    type: "function_call"
+                    name: "shell"
+                    arguments: '{"cmd":["touch","example.py"]}'
+                  - id: "out_789"
+                    type: "function_call_output"
+                    call_id: "func_789"
+                    output: '{"output":"","metadata":{"exit_code":0}}'
+                totalMessageCount: 12
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Message is required"
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Failed to process message"
+
+  /sessions/{sessionId}/cancel:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        description: Unique session identifier
+        schema:
+          type: string
+          example: "abc123-def456"
+    
+    post:
+      tags:
+        - Operations
+      summary: Cancel Operation
+      description: |
+        Cancel any currently running operation in the specified session.
+        
+        **What gets cancelled**:
+        - Long-running AI requests
+        - File operations in progress  
+        - Shell commands being executed
+        - Any pending tool calls
+        
+        **Safe Operation**: Can be called even if no operation is running. Session remains active after cancellation.
+      operationId: cancelOperation
+      responses:
+        '200':
+          description: Operation cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelResponse'
+              example:
+                sessionId: "abc123"
+                status: "cancelled"
+                timestamp: "2025-01-06T18:35:00.000Z"
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy]
+          description: Server health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server timestamp
+
+    CreateSessionRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: AI model to use
+          default: "codex-mini-latest"
+          examples:
+            - "codex-mini-latest"
+            - "gpt-4"
+            - "gemini-2.5-pro"
+            - "claude-3-sonnet"
+        provider:
+          type: string
+          description: AI provider
+          default: "openai"
+          enum:
+            - openai
+            - gemini
+            - anthropic
+            - azure
+            - ollama
+            - mistral
+            - deepseek
+            - xai
+            - groq
+            - openrouter
+        approvalMode:
+          type: string
+          description: Approval policy for agent actions
+          default: "suggest"
+          enum:
+            - suggest
+            - auto-edit
+            - full-auto
+        apiKey:
+          type: string
+          description: API key for the provider (optional if env var is set)
+          example: "sk-..."
+        additionalWritableRoots:
+          type: array
+          items:
+            type: string
+          description: Additional directories the agent can write to
+          example: ["/tmp/workspace", "/home/user/projects"]
+        config:
+          type: object
+          description: Additional configuration options
+          properties:
+            reasoningEffort:
+              type: string
+              enum: [low, medium, high]
+              description: Reasoning effort level for compatible models
+            flexMode:
+              type: boolean
+              description: Enable flex-mode processing tier
+            disableResponseStorage:
+              type: boolean
+              description: Disable server-side response storage
+
+    SessionResponse:
+      type: object
+      required:
+        - sessionId
+        - config
+        - createdAt
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+          example: "abc123-def456-789"
+        config:
+          type: object
+          required:
+            - model
+            - provider
+            - approvalMode
+          properties:
+            model:
+              type: string
+              example: "codex-mini-latest"
+            provider:
+              type: string
+              example: "openai"
+            approvalMode:
+              type: string
+              example: "suggest"
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+
+    SessionInfoResponse:
+      type: object
+      required:
+        - sessionId
+        - config
+        - messageCount
+        - createdAt
+        - lastActivity
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+        config:
+          type: object
+          properties:
+            model:
+              type: string
+            provider:
+              type: string
+        messageCount:
+          type: integer
+          minimum: 0
+          description: Total number of messages in the session
+        createdAt:
+          type: string
+          format: date-time
+          description: Session creation timestamp
+        lastActivity:
+          type: string
+          format: date-time
+          description: Last activity timestamp
+
+    SessionListResponse:
+      type: object
+      required:
+        - sessions
+        - totalCount
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionInfoResponse'
+        totalCount:
+          type: integer
+          minimum: 0
+          description: Total number of active sessions
+
+    SendMessageRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Text message to send to the agent
+          minLength: 1
+          example: "Create a Python function that calculates prime numbers"
+        images:
+          type: array
+          items:
+            type: string
+          description: Array of image file paths for multimodal input
+          example: ["/path/to/screenshot.png", "/path/to/diagram.jpg"]
+
+    MessageContent:
+      type: object
+      required:
+        - type
+      discriminator:
+        propertyName: type
+      properties:
+        type:
+          type: string
+          enum:
+            - input_text
+            - output_text
+            - input_image
+            - input_file
+            - refusal
+      oneOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [input_text, output_text]
+            text:
+              type: string
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [input_image]
+            image_url:
+              type: string
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [input_file]
+            filename:
+              type: string
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [refusal]
+            refusal:
+              type: string
+
+    Message:
+      type: object
+      required:
+        - type
+      discriminator:
+        propertyName: type
+      properties:
+        id:
+          type: string
+          description: Message identifier
+        type:
+          type: string
+          enum:
+            - message
+            - function_call
+            - function_call_output
+            - reasoning
+            - local_shell_call
+      oneOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [message]
+            role:
+              type: string
+              enum: [user, assistant, system]
+            content:
+              type: array
+              items:
+                $ref: '#/components/schemas/MessageContent'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [function_call]
+            name:
+              type: string
+              example: "shell"
+            call_id:
+              type: string
+            arguments:
+              type: string
+              description: JSON string of function arguments
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [function_call_output]
+            call_id:
+              type: string
+            output:
+              type: string
+              description: JSON string of function output
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [reasoning]
+            summary:
+              type: array
+              items:
+                type: string
+            duration_ms:
+              type: integer
+
+    MessageResponse:
+      type: object
+      required:
+        - sessionId
+        - messages
+        - totalMessageCount
+      properties:
+        sessionId:
+          type: string
+          description: Session identifier
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          description: New messages from this interaction
+        totalMessageCount:
+          type: integer
+          minimum: 0
+          description: Total messages in the session
+
+    MessageHistoryResponse:
+      type: object
+      required:
+        - sessionId
+        - messages
+        - totalCount
+        - offset
+        - limit
+      properties:
+        sessionId:
+          type: string
+          description: Session identifier
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          description: Messages for the requested page
+        totalCount:
+          type: integer
+          minimum: 0
+          description: Total number of messages in the session
+        offset:
+          type: integer
+          minimum: 0
+          description: Starting index of this page
+        limit:
+          type: integer
+          minimum: 1
+          description: Maximum messages per page
+
+    CancelResponse:
+      type: object
+      required:
+        - sessionId
+        - status
+        - timestamp
+      properties:
+        sessionId:
+          type: string
+          description: Session identifier
+        status:
+          type: string
+          enum: [cancelled]
+          description: Cancellation status
+        timestamp:
+          type: string
+          format: date-time
+          description: Cancellation timestamp
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Session not found"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Optional API key authentication
+
+security:
+  - ApiKeyAuth: []
+  - {} # No auth required
+
+externalDocs:
+  description: Codex CLI Documentation
+  url: https://github.com/openai/codex

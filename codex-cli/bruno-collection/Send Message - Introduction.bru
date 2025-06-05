@@ -1,0 +1,52 @@
+meta {
+  name: Send Message - Introduction
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "Hello! I'm testing the Codex HTTP API. Can you introduce yourself and explain what you can help me with?",
+    "images": []
+  }
+}
+
+tests {
+  test("should send message successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('sessionId');
+    expect(res.getBody()).to.have.property('messages');
+    expect(res.getBody()).to.have.property('totalMessageCount');
+    expect(res.getBody().messages).to.be.an('array');
+  });
+  
+  test("should receive assistant response", function() {
+    const messages = res.getBody().messages;
+    const assistantMessages = messages.filter(m => m.type === 'message' && m.role === 'assistant');
+    expect(assistantMessages.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Send Message - Introduction
+  
+  Example of sending an introductory message to the agent.
+  
+  **What this demonstrates:**
+  - Basic message sending
+  - Agent introduction and capabilities
+  - Message structure parsing
+  
+  **Expected Assistant Response:**
+  The agent will introduce itself and explain its capabilities, including:
+  - Code writing and editing
+  - File operations
+  - Command execution
+  - Problem solving
+}

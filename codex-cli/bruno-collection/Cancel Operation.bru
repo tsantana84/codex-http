@@ -1,0 +1,57 @@
+meta {
+  name: Cancel Operation
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/cancel
+  body: none
+  auth: none
+}
+
+tests {
+  test("should cancel operation successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('sessionId');
+    expect(res.getBody()).to.have.property('status');
+    expect(res.getBody()).to.have.property('timestamp');
+    expect(res.getBody().status).to.equal('cancelled');
+  });
+  
+  test("should return correct sessionId", function() {
+    expect(res.getBody().sessionId).to.equal(bru.getEnvVar("sessionId"));
+  });
+}
+
+docs {
+  # Cancel Operation
+  
+  Cancels any currently running operation in the specified session.
+  
+  **Response:**
+  ```json
+  {
+    "sessionId": "abc123",
+    "status": "cancelled",
+    "timestamp": "2025-01-06T18:35:00.000Z"
+  }
+  ```
+  
+  **What gets cancelled:**
+  - Long-running AI requests
+  - File operations in progress
+  - Shell commands being executed
+  - Any pending tool calls
+  
+  **Use Cases:**
+  - Stop runaway operations
+  - User-initiated cancellation
+  - Timeout handling
+  - Emergency stops
+  
+  **Note:**
+  - Safe to call even if no operation is running
+  - Session remains active after cancellation
+  - Can send new messages after cancelling
+}

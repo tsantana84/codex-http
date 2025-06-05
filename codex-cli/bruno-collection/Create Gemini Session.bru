@@ -1,0 +1,68 @@
+meta {
+  name: Create Gemini Session
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/sessions
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "model": "gemini-2.5-pro",
+    "provider": "gemini",
+    "approvalMode": "suggest",
+    "apiKey": "{{geminiApiKey}}",
+    "config": {
+      "reasoningEffort": "medium"
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("sessionId", res.getBody().sessionId);
+    console.log("Gemini session created:", res.getBody().sessionId);
+  }
+}
+
+tests {
+  test("should create Gemini session successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody()).to.have.property('sessionId');
+    expect(res.getBody().config.provider).to.equal('gemini');
+    expect(res.getBody().config.model).to.equal('gemini-2.5-pro');
+  });
+}
+
+docs {
+  # Create Gemini Session
+  
+  Creates a new session using Google's Gemini AI model.
+  
+  **Gemini Models Available:**
+  - `gemini-2.5-pro` - Latest and most advanced model (recommended)
+  - `gemini-1.5-pro` - Previous Pro model with large context
+  - `gemini-1.5-flash` - Faster model for quick responses
+  - `gemini-pro` - Standard Pro model
+  
+  **Configuration:**
+  - Provider: `gemini`
+  - API Key: Google AI Studio API key (starts with AIza...)
+  - Base URL: `https://generativelanguage.googleapis.com/v1beta/openai`
+  
+  **Features:**
+  - Large context window (up to 1M tokens for 1.5-pro)
+  - Multimodal capabilities (text + images)
+  - Fast inference
+  - Cost-effective compared to GPT-4
+  
+  **Use Cases:**
+  - Long document analysis
+  - Code review and generation
+  - Multimodal tasks with images
+  - Cost-sensitive applications
+}

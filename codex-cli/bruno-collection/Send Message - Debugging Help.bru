@@ -1,0 +1,59 @@
+meta {
+  name: Send Message - Debugging Help
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/sessions/{{sessionId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "I'm getting a 'TypeError: unsupported operand type(s)' error in my Python code. Can you help me debug this? First, let's see what Python files we have, then check for common causes of this error.",
+    "images": []
+  }
+}
+
+tests {
+  test("should handle debugging request", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('messages');
+  });
+  
+  test("should provide helpful debugging response", function() {
+    const messages = res.getBody().messages;
+    const assistantMessages = messages.filter(m => 
+      m.type === 'message' && m.role === 'assistant'
+    );
+    
+    expect(assistantMessages.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Send Message - Debugging Help
+  
+  Example of requesting debugging assistance for code errors.
+  
+  **What this demonstrates:**
+  - Error analysis and debugging
+  - Systematic problem-solving approach
+  - Code inspection and fixes
+  - Educational explanations
+  
+  **Expected Agent Actions:**
+  1. Investigate existing Python files
+  2. Look for TypeError patterns
+  3. Explain common causes of the error
+  4. Suggest debugging steps
+  5. Potentially fix identified issues
+  
+  **Common TypeError Causes Agent Might Find:**
+  - String/number operations
+  - None values in calculations
+  - Incorrect data types
+  - Missing type conversions
+}
