@@ -2,29 +2,105 @@
 
 Hi! This document describes the HTTP interface for the Codex CLI, which allows you to interact with the same core agent logic that powers the terminal CLI through RESTful API endpoints.
 
+## Setup for New Engineers
+
+### Prerequisites
+
+- Node.js 22+ installed
+- Git installed
+- An API key from one of the supported providers (OpenAI, Gemini, Anthropic, etc.)
+
+### Complete Setup Steps
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/tsantana84/codex-http.git
+   cd codex-http/codex-cli
+   ```
+
+2. **Install pnpm (package manager):**
+
+   ```bash
+   npm install -g pnpm
+   ```
+
+3. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+4. **Build the project:**
+
+   ```bash
+   pnpm build
+   ```
+
+5. **Link the binary globally (one-time setup):**
+
+   ```bash
+   npm link
+   ```
+
+6. **Set your API key (choose one provider):**
+
+   ```bash
+   # For OpenAI
+   export OPENAI_API_KEY="your-openai-key-here"
+
+   # OR for Gemini
+   export GEMINI_API_KEY="your-gemini-key-here"
+
+   # OR for Anthropic
+   export ANTHROPIC_API_KEY="your-anthropic-key-here"
+   ```
+
 ## Quick Start
 
 1. **Start the HTTP server:**
+
    ```bash
    codex-http --port 3000
    ```
 
 2. **Test the server:**
+
    ```bash
    curl http://localhost:3000/health
    ```
 
-3. **View the interactive API documentation:**
+3. **Create a session with your provider:**
+
+   ```bash
+   # With OpenAI
+   curl -X POST http://localhost:3000/sessions \
+     -H "Content-Type: application/json" \
+     -d '{"model":"gpt-4","provider":"openai"}'
+
+   # OR with Gemini
+   curl -X POST http://localhost:3000/sessions \
+     -H "Content-Type: application/json" \
+     -d '{"model":"gemini-pro","provider":"gemini"}'
+
+   # OR with Anthropic
+   curl -X POST http://localhost:3000/sessions \
+     -H "Content-Type: application/json" \
+     -d '{"model":"claude-3-sonnet-20240229","provider":"anthropic"}'
+   ```
+
+4. **View the interactive API documentation:**
+
    ```bash
    # Open Swagger UI in your browser
    open swagger-ui.html
-   
+
    # Or serve it with a simple HTTP server
    python3 -m http.server 8080
    # Then visit: http://localhost:8080/swagger-ui.html
    ```
 
-4. **Run the example client:**
+5. **Run the example client:**
    ```bash
    node examples/http-client-example.js
    ```
@@ -32,17 +108,20 @@ Hi! This document describes the HTTP interface for the Codex CLI, which allows y
 ## 📚 Documentation Options
 
 ### **Interactive API Documentation (Recommended)**
-- **File**: `swagger-ui.html` 
+
+- **File**: `swagger-ui.html`
 - **Features**: Interactive API explorer, try-it-out functionality, comprehensive examples
 - **Usage**: Open the HTML file in your browser or serve it with any web server
 
 ### **API Testing Collection**
+
 - **Tool**: Bruno API client
 - **Location**: `bruno-collection/` directory
 - **Features**: Complete test suite with 19+ requests, environment setup, error scenarios
 - **Setup**: Import the collection into [Bruno](https://usebruno.com/)
 
 ### **Reference Documentation**
+
 - **File**: This `HTTP_API.md` file
 - **Features**: Complete endpoint reference, examples, integration guides
 - **Format**: Markdown for easy reading and integration
@@ -69,6 +148,7 @@ curl http://localhost:3000/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -98,14 +178,16 @@ curl -X POST http://localhost:3000/sessions \
 ```
 
 **Request Body:**
+
 - `model` (string, optional): AI model to use (defaults to `codex-mini-latest`)
 - `provider` (string, optional): AI provider (defaults to `openai`)
-- `approvalMode` (string, optional): "suggest", "auto-edit", or "full-auto"  
+- `approvalMode` (string, optional): "suggest", "auto-edit", or "full-auto"
 - `apiKey` (string, optional): API key (uses env var if not provided)
 - `additionalWritableRoots` (array, optional): Additional writable directories
 - `config` (object, optional): Additional configuration overrides
 
 **Response:**
+
 ```json
 {
   "sessionId": "abc123...",
@@ -129,6 +211,7 @@ curl http://localhost:3000/sessions/abc123
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "abc123",
@@ -153,6 +236,7 @@ curl http://localhost:3000/sessions
 ```
 
 **Response:**
+
 ```json
 {
   "sessions": [
@@ -201,10 +285,12 @@ curl -X POST http://localhost:3000/sessions/abc123/messages \
 ```
 
 **Request Body:**
+
 - `message` (string, required): The text message to send
 - `images` (array, optional): Array of image file paths
 
 **Response:**
+
 ```json
 {
   "sessionId": "abc123",
@@ -242,10 +328,12 @@ curl "http://localhost:3000/sessions/abc123/messages?offset=0&limit=50"
 ```
 
 **Query Parameters:**
+
 - `offset` (number, optional): Starting index (default: 0)
 - `limit` (number, optional): Maximum messages to return (default: 100, max: 1000)
 
 **Response:**
+
 ```json
 {
   "sessionId": "abc123",
@@ -269,6 +357,7 @@ curl -X POST http://localhost:3000/sessions/abc123/cancel
 ```
 
 **Response:**
+
 ```json
 {
   "sessionId": "abc123",
@@ -282,6 +371,7 @@ curl -X POST http://localhost:3000/sessions/abc123/cancel
 The API returns the same message types as the CLI:
 
 ### User Message
+
 ```json
 {
   "type": "message",
@@ -296,6 +386,7 @@ The API returns the same message types as the CLI:
 ```
 
 ### Assistant Message
+
 ```json
 {
   "type": "message",
@@ -310,6 +401,7 @@ The API returns the same message types as the CLI:
 ```
 
 ### Function Call
+
 ```json
 {
   "type": "function_call",
@@ -320,6 +412,7 @@ The API returns the same message types as the CLI:
 ```
 
 ### Function Output
+
 ```json
 {
   "type": "function_call_output",
@@ -339,6 +432,7 @@ All errors return appropriate HTTP status codes with JSON error messages:
 ```
 
 Common status codes:
+
 - `400`: Bad Request (invalid input)
 - `404`: Not Found (session doesn't exist)
 - `500`: Internal Server Error
@@ -352,11 +446,12 @@ Common status codes:
 - **Session Isolation**: Sessions are completely isolated from each other
 
 ### **Example: Multiple Models on One Server**
+
 ```bash
 # Session 1: OpenAI GPT-4
 curl -X POST http://localhost:3000/sessions -d '{"model":"gpt-4","provider":"openai"}'
 
-# Session 2: Gemini 2.5 Pro  
+# Session 2: Gemini 2.5 Pro
 curl -X POST http://localhost:3000/sessions -d '{"model":"gemini-2.5-pro","provider":"gemini"}'
 
 # Session 3: Default (codex-mini-latest with OpenAI)
@@ -374,39 +469,42 @@ curl -X POST http://localhost:3000/sessions -d '{"approvalMode":"suggest"}'
 
 ```javascript
 class CodexClient {
-  constructor(baseUrl = 'http://localhost:3000') {
+  constructor(baseUrl = "http://localhost:3000") {
     this.baseUrl = baseUrl;
   }
 
   async createSession(config = {}) {
     const response = await fetch(`${this.baseUrl}/sessions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(config),
     });
     return response.json();
   }
 
   async sendMessage(sessionId, message) {
-    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
+    const response = await fetch(
+      `${this.baseUrl}/sessions/${sessionId}/messages`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      },
+    );
     return response.json();
   }
 
   async deleteSession(sessionId) {
     await fetch(`${this.baseUrl}/sessions/${sessionId}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 }
 
 // Usage
 const client = new CodexClient();
-const session = await client.createSession({ model: 'codex-mini-latest' });
-const response = await client.sendMessage(session.sessionId, 'Hello!');
+const session = await client.createSession({ model: "codex-mini-latest" });
+const response = await client.sendMessage(session.sessionId, "Hello!");
 await client.deleteSession(session.sessionId);
 ```
 
@@ -436,6 +534,7 @@ The HTTP server uses the same configuration system as the CLI:
 ## 📖 Quick Reference
 
 ### **View Documentation**
+
 ```bash
 # Interactive Swagger UI (best experience)
 open swagger-ui.html
@@ -445,6 +544,7 @@ python3 -m http.server 8080  # Visit http://localhost:8080/swagger-ui.html
 ```
 
 ### **Test API Endpoints**
+
 ```bash
 # Import Bruno collection
 # 1. Install Bruno: https://usebruno.com/
@@ -454,11 +554,12 @@ python3 -m http.server 8080  # Visit http://localhost:8080/swagger-ui.html
 ```
 
 ### **Quick API Test**
+
 ```bash
 # 1. Start server
 codex-http --port 3000
 
-# 2. Create session  
+# 2. Create session
 curl -X POST http://localhost:3000/sessions -H "Content-Type: application/json" -d '{"model":"codex-mini-latest"}'
 
 # 3. Send message (replace SESSION_ID)
