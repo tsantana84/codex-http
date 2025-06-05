@@ -1,6 +1,6 @@
 # Codex HTTP API
 
-This document describes the HTTP interface for the Codex CLI, which allows you to interact with the same core agent logic that powers the terminal CLI through RESTful API endpoints.
+Hi! This document describes the HTTP interface for the Codex CLI, which allows you to interact with the same core agent logic that powers the terminal CLI through RESTful API endpoints.
 
 ## Quick Start
 
