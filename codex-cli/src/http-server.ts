@@ -171,7 +171,9 @@ export class CodexHttpServer {
         },
         beforeLLMCall: enableBeforeLLMHook ? async (input: any) => {
           log(`Session ${sessionId}: Before LLM call with input length: ${JSON.stringify(input).length}`);
-          // Dummy implementation - replace with actual logic
+          // TODO: Add your input transformation logic here
+          // For now, return the input unchanged
+          return input;
         } : undefined
       });
 

@@ -83,8 +83,8 @@ type AgentLoopParams = {
   ) => Promise<CommandConfirmation>;
   onLastResponseId: (lastResponseId: string) => void;
   
-  /** Called before making LLM API call with the prepared input. */
-  beforeLLMCall?: (input: any) => Promise<void>;
+  /** Called before making LLM API call with the prepared input. Should return the modified input. */
+  beforeLLMCall?: (input: any) => Promise<any>;
 };
 
 const shellFunctionTool: FunctionTool = {
@@ -820,7 +820,7 @@ export class AgentLoop {
 
             // Call pre-LLM hook if provided
             if (this.beforeLLMCall) {
-              await this.beforeLLMCall(turnInput);
+              turnInput = await this.beforeLLMCall(turnInput);
             }
 
             // eslint-disable-next-line no-await-in-loop
