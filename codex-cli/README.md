@@ -520,7 +520,7 @@ await client.deleteSession(session.sessionId);
 The HTTP server uses the same configuration system as the CLI:
 
 - **Config Files**: `~/.codex/config.json` or `~/.codex/config.yaml`
-- **Environment Variables**: `OPENAI_API_KEY`, etc.
+- **Environment Variables**: `OPENAI_API_KEY`, `PROMPT_DECORATOR_URL`, etc.
 - **Project Docs**: `AGENTS.md` files are loaded and used
 - **Provider Support**: All CLI providers are supported
 

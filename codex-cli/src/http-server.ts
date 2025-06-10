@@ -9,6 +9,7 @@ import { AutoApprovalMode } from "./utils/auto-approval-mode.js";
 import { ReviewDecision } from "./utils/agent/review.js";
 import { loadConfig } from "./utils/config.js";
 import { createInputItem } from "./utils/input-utils.js";
+import { decoratePrompt } from "./utils/decorate-prompt.js";
 import { log } from "./utils/logger/log.js";
 import express from "express";
 import { randomUUID } from "crypto";
@@ -243,8 +244,9 @@ export class CodexHttpServer {
         return;
       }
 
-      // Create input item from message and images
-      const inputItem = await createInputItem(message, images);
+      // Decorate prompt before creating input item
+      const decorated = await decoratePrompt(message);
+      const inputItem = await createInputItem(decorated, images);
       
       // Get current message count to track new messages
       const initialMessageCount = session.messages.length;
