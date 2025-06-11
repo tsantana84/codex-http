@@ -82,6 +82,9 @@ type AgentLoopParams = {
     applyPatch: ApplyPatchCommand | undefined,
   ) => Promise<CommandConfirmation>;
   onLastResponseId: (lastResponseId: string) => void;
+  
+  /** Called before making LLM API call with the prepared input. Should return the modified input. */
+  beforeLLMCall?: (input: any) => Promise<any>;
 };
 
 const shellFunctionTool: FunctionTool = {
@@ -137,6 +140,7 @@ export class AgentLoop {
     applyPatch: ApplyPatchCommand | undefined,
   ) => Promise<CommandConfirmation>;
   private onLastResponseId: (lastResponseId: string) => void;
+  private beforeLLMCall?: (input: any) => Promise<void>;
 
   /**
    * A reference to the currently active stream returned from the OpenAI
@@ -281,6 +285,7 @@ export class AgentLoop {
     getCommandConfirmation,
     onLastResponseId,
     additionalWritableRoots,
+    beforeLLMCall,
   }: AgentLoopParams & { config?: AppConfig }) {
     this.model = model;
     this.provider = provider;
@@ -301,6 +306,7 @@ export class AgentLoop {
     this.onLoading = onLoading;
     this.getCommandConfirmation = getCommandConfirmation;
     this.onLastResponseId = onLastResponseId;
+    this.beforeLLMCall = beforeLLMCall;
 
     this.disableResponseStorage = disableResponseStorage ?? false;
     this.sessionId = getSessionId() || randomUUID().replaceAll("-", "");
@@ -811,6 +817,11 @@ export class AgentLoop {
             log(
               `instructions (length ${mergedInstructions.length}): ${mergedInstructions}`,
             );
+
+            // Call pre-LLM hook if provided
+            if (this.beforeLLMCall) {
+              turnInput = await this.beforeLLMCall(turnInput);
+            }
 
             // eslint-disable-next-line no-await-in-loop
             stream = await responseCall({

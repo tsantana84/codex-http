@@ -169,7 +169,8 @@ export class CodexHttpServer {
         approvalMode = "suggest",
         apiKey,
         additionalWritableRoots = [],
-        config: clientConfig = {}
+        config: clientConfig = {},
+        enableBeforeLLMHook = false
       } = req.body;
 
       // Load base config and merge with client-provided config
@@ -212,7 +213,13 @@ export class CodexHttpServer {
         getCommandConfirmation: this.createCommandConfirmationHandler(approvalMode as ApprovalPolicy),
         onLastResponseId: (responseId: string) => {
           session.lastResponseId = responseId;
-        }
+        },
+        beforeLLMCall: enableBeforeLLMHook ? async (input: any) => {
+          log(`Session ${sessionId}: Before LLM call with input length: ${JSON.stringify(input).length}`);
+          // TODO: Add your input transformation logic here
+          // For now, return the input unchanged
+          return input;
+        } : undefined
       });
 
       sessions.set(sessionId, session);
