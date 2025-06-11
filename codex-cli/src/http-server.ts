@@ -10,6 +10,7 @@ import { ReviewDecision } from "./utils/agent/review.js";
 import { loadConfig } from "./utils/config.js";
 import { createInputItem } from "./utils/input-utils.js";
 import { log } from "./utils/logger/log.js";
+import { ragClient } from "./utils/rag-client.js";
 import express from "express";
 import { randomUUID } from "crypto";
 
@@ -76,8 +77,16 @@ export class CodexHttpServer {
 
   private setupRoutes(): void {
     // Health check
-    this.app.get("/health", (req, res) => {
-      res.json({ status: "healthy", timestamp: new Date().toISOString() });
+    this.app.get("/health", async (req, res) => {
+      const ragHealthy = await ragClient.healthCheck();
+      res.json({ 
+        status: "healthy", 
+        timestamp: new Date().toISOString(),
+        rag: {
+          enabled: ragClient.getConfig().enabled,
+          healthy: ragHealthy
+        }
+      });
     });
 
     // Create new session
@@ -113,6 +122,37 @@ export class CodexHttpServer {
     // List all sessions
     this.app.get("/sessions", (req, res) => {
       this.listSessions(req, res);
+    });
+
+    // RAG configuration endpoints
+    this.app.get("/rag/config", (req, res) => {
+      res.json(ragClient.getConfig());
+    });
+
+    this.app.put("/rag/config", (req, res) => {
+      try {
+        ragClient.updateConfig(req.body);
+        res.json({ success: true, config: ragClient.getConfig() });
+      } catch (error) {
+        res.status(400).json({ error: "Invalid RAG configuration" });
+      }
+    });
+
+    // RAG search endpoint for testing
+    this.app.post("/rag/search", async (req, res) => {
+      try {
+        const { query, top_k, threshold } = req.body;
+        if (!query) {
+          res.status(400).json({ error: "Query is required" });
+          return;
+        }
+        
+        const results = await ragClient.search(query, { top_k, threshold });
+        res.json(results || { documents: [], query, total_results: 0 });
+      } catch (error) {
+        log(`RAG search error: ${error}`);
+        res.status(500).json({ error: "RAG search failed" });
+      }
     });
   }
 
@@ -236,15 +276,28 @@ export class CodexHttpServer {
     }
 
     try {
-      const { message, images = [] } = req.body;
+      const { message, images = [], ragEnabled = true, enableRag = true } = req.body;
+      const useRag = ragEnabled && enableRag;
 
       if (!message) {
         res.status(400).json({ error: "Message is required" });
         return;
       }
 
-      // Create input item from message and images
-      const inputItem = await createInputItem(message, images);
+      // Enhance message with RAG context if enabled
+      let enhancedMessage = message;
+      if (useRag) {
+        try {
+          enhancedMessage = await ragClient.enhanceMessage(message);
+          log(`Session ${sessionId}: Enhanced message with RAG context`);
+        } catch (error) {
+          log(`Session ${sessionId}: RAG enhancement failed, using original message: ${error}`);
+          // Continue with original message if RAG fails
+        }
+      }
+
+      // Create input item from enhanced message and images
+      const inputItem = await createInputItem(enhancedMessage, images);
       
       // Get current message count to track new messages
       const initialMessageCount = session.messages.length;
@@ -260,7 +313,8 @@ export class CodexHttpServer {
       res.json({
         sessionId,
         messages: newMessages,
-        totalMessageCount: session.messages.length
+        totalMessageCount: session.messages.length,
+        ragEnhanced: useRag && enhancedMessage !== message
       });
     } catch (error) {
       log(`Error in sendMessage for session ${sessionId}: ${error}`);
