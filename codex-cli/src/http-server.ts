@@ -37,6 +37,11 @@ export class CodexHttpServer {
 
   constructor(private port: number = 3000) {
     this.app = express();
+    
+    // Configure RAG client with 0.5 threshold
+    ragClient.updateConfig({ threshold: 0.5 });
+    log('RAG client configured with threshold: 0.5');
+    
     this.setupMiddleware();
     this.setupRoutes();
     this.startSessionCleanup();
@@ -286,14 +291,23 @@ export class CodexHttpServer {
 
       // Enhance message with RAG context if enabled
       let enhancedMessage = message;
+      log(`Session ${sessionId}: useRag=${useRag}, ragEnabled=${ragEnabled}, enableRag=${enableRag}`);
+      log(`Session ${sessionId}: RAG config: ${JSON.stringify(ragClient.getConfig())}`);
+      
       if (useRag) {
         try {
+          log(`Session ${sessionId}: Attempting RAG enhancement for message: "${message}"`);
           enhancedMessage = await ragClient.enhanceMessage(message);
-          log(`Session ${sessionId}: Enhanced message with RAG context`);
+          log(`Session ${sessionId}: RAG enhancement successful, enhanced=${enhancedMessage !== message}`);
+          if (enhancedMessage !== message) {
+            log(`Session ${sessionId}: Enhanced message length: ${enhancedMessage.length} vs original: ${message.length}`);
+          }
         } catch (error) {
           log(`Session ${sessionId}: RAG enhancement failed, using original message: ${error}`);
           // Continue with original message if RAG fails
         }
+      } else {
+        log(`Session ${sessionId}: RAG disabled, using original message`);
       }
 
       // Create input item from enhanced message and images
